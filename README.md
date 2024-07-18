@@ -90,6 +90,7 @@ command being executed and [tini]. [tini] is made available directly in this
 image to make it possible to run in [Swarm] environments.
 
 special thanks to [efrecon].
+
   [tini]: https://github.com/krallin/tini
   [Swarm]: https://docs.docker.com/engine/swarm/
-  [efrecon]:https://github.com/efrecon
+  [efrecon]: https://github.com/efrecon
