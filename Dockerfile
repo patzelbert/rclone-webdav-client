@@ -39,7 +39,10 @@ ENV WEBDRIVE_MOUNT=/mnt/webdrive
 
 RUN apk --no-cache add ca-certificates fuse3 tini rclone
 RUN apk upgrade --available
+
 COPY *.sh /usr/local/bin/
+RUN chown $UID:$GID /usr/local/bin/*.sh
+RUN chmod +x /usr/local/bin/*.sh
 
 # Following should match the WEBDRIVE_MOUNT environment variable.
 VOLUME [ "/mnt/webdrive" ]
