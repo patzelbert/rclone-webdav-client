@@ -1,8 +1,8 @@
-# Dockerised WebDAV Client
+# Dockerised RCLONE WebDAV Client
 
-This Docker [image] (also at the [GHCR]) and associated [project] facilitate
+This Docker [image] and associated [project] facilitate
 mounting of remote WebDAV resources into containers. Mounting is implemented
-using [davfs2] and the image makes it possible to set all supported davfs
+using [rclone] and the image makes it possible to set all supported rclone
 [configuration] options for the share. The image basically implements a docker
 [volume] on the cheap: Used with the proper creation options (see below) , you
 should be able to bind-mount back the remote bucket onto a host directory. This
@@ -10,11 +10,10 @@ directory will make the content of the bucket available to processes, but also
 all other containers on the host. The image automatically unmounts the remote
 bucket on container termination.
 
-  [image]: https://hub.docker.com/r/efrecon/webdav-client
-  [GHCR]: https://github.com/efrecon/docker-webdav-client/pkgs/container/webdav-client
-  [project]: https://github.com/efrecon/docker-webdav-client
-  [davfs2]: http://savannah.nongnu.org/projects/davfs2
-  [configuration]: https://man.cx/davfs2.conf(5)
+  [image]: https://hub.docker.com/r/patzelbert/rclone-webdav-client
+  [project]: https://github.com/patzelbert/rclone-webdav-client
+  [rclone]: https://github.com/search?q=rclone&type=repositories
+  [configuration]: https://rclone.org/
   [volume]: https://docs.docker.com/storage/
 
 ## Example
@@ -33,9 +32,9 @@ docker run -it --rm \
     --env "WEBDRIVE_USERNAME=<YourUserName>" \
     --env "WEBDRIVE_PASSWORD=<SuperSecretPassword>" \
     --env "WEBDRIVE_URL=https://dav.box.com/dav" \
-    --env "DAVFS2_ASK_AUTH=0" \
+    --env "RCLONE_CACHE_INFO_AGE=1h" \
     -v /mnt/tmp:/mnt/webdrive:rshared \
-    efrecon/webdav-client
+    patzelbert/rclone-webdav-client
 ```
 
 The `--device`, `--cap-add` and `--security-opt` options and their values are to
@@ -54,23 +53,24 @@ parametrise the container:
 * `WEBDRIVE_PASSWORD_FILE` points instead to a file that will contain the
   password for the user. When this is present, the password will be taken from
   the file instead of from the `WEBDRIVE_PASSWORD` variable. If that variable
-  existed, it will be disregarded. This makes it easy to pass passwords using
+  existed, it will be disregarded. This makes it easy to pass passwords using 
   Docker [secrets].
 * `WEBDRIVE_MOUNT` is the location within the container where to mount the
   WebDAV resource. This defaults to `/mnt/webdrive` and is not really meant to
   be changed.
-* `OWNER` is the user ID for the owner of the share inside the container.
+* `UID` is the user ID for the owner of the share inside the container.
+* `GID` is the user ID for the owner of the share inside the container.
 
   [secrets]: https://docs.docker.com/engine/swarm/secrets/
 
 ## davFS Options
 
-All [configuration] options recognised by davFS can be given for that particular
+All [configuration] options recognised by rclone can be given for that particular
 share. Environment variables should be created out of the name of the
 configuration option for this to work. Any existing option should be translated
-to uppercase and led by the keyword `DAVFS2_` to be recognised. So to set the
-davfs2 option called `ask_auth` to `0`, you would set the environment variable
-`DAVFS2_ASK_AUTH` to `0`.
+to uppercase and led by the keyword `RCLONE_` to be recognised. So to set the
+rclone option called `cache-info-age` to `1m`, you would set the environment variable
+`RCLONE_CACHE_INFO_AGE` to `1m`.
 
 ## Commands
 
@@ -89,5 +89,7 @@ Automatic unmounting is achieved through a combination of a `trap` in the
 command being executed and [tini]. [tini] is made available directly in this
 image to make it possible to run in [Swarm] environments.
 
+special thanks to [efrecon].
   [tini]: https://github.com/krallin/tini
   [Swarm]: https://docs.docker.com/engine/swarm/
+  [efrecon]:https://github.com/efrecon
