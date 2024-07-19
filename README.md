@@ -97,7 +97,7 @@ special thanks to [efrecon].
 
   
 ## Docker Compose
-  ```Shell
+```Shell
 	services:
 	  webdav-client:
 		image: patzelbert/rclone-webdav-client:latest
