@@ -19,12 +19,12 @@ jobs:
         with:
           submodules: true
       -
-        # Note: This uses the password, not the token as this action would 
-        # otherwise not work.
+        # Note: This uses the password, not the token as this action would
+        # otherwise not work. 
         name: Update repo description at Docker Hub
         uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: patzelbert/rclone-webdav-client
-          short-description: WebDAV client for Docker with easy access to all rclone options
+          short-description: WebDAV client for Docker with easy access to all davfs2 options
