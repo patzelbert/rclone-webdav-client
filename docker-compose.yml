@@ -1,8 +1,6 @@
 services:
   webdav-client:
-    build:
-      context: /home/ch40z/docker-compose/images/webdav-client
-      dockerfile: Dockerfile
+    image: patzelbert/rclone-webdav-client:latest
     container_name: webdav-client
     restart: always
     privileged: true
@@ -23,10 +21,10 @@ services:
     networks:
       - webdav-nw
     volumes:
-      - /media/Data/Shared/Photoprism/Patrick/data:/mnt/webdrive:rshared
-      - /media/Data/Shared/Photoprism/Patrick/cache:/var/cache/webdav:rw
+      - ./data:/mnt/webdrive:rshared
+      - ./cache:/var/cache/webdav:rw
     healthcheck:
-      test: ["CMD-SHELL", "test -f /usr/local/bin/mounted  && sleep 10 || exit 1"]
+      test: ["CMD-SHELL", "test -f /usr/local/bin/mounted  && sleep 1 || exit 1"]
       interval: 20s
       timeout: 15s
       retries: 10

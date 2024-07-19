@@ -94,3 +94,48 @@ special thanks to [efrecon].
   [tini]: https://github.com/krallin/tini
   [Swarm]: https://docs.docker.com/engine/swarm/
   [efrecon]: https://github.com/efrecon
+
+  
+## Docker Compose
+  ```Shell
+services:
+  webdav-client:
+    image: patzelbert/rclone-webdav-client:latest
+    container_name: webdav-client
+    restart: always
+    privileged: true
+    user: root
+    environment:
+      DEBUG: LOG_DEBUG
+      WEBDRIVE_USERNAME: $WEBDAV_USERNAME
+      WEBDRIVE_PASSWORD: $WEBDAV_PASSWORD
+      WEBDRIVE_URL: $WEBDAV_URL
+      RCLONE_CACHE_CHUNK_SIZE: 5M
+      RCLONE_CACHE_INFO_AGE: 1h
+      RCLONE_CACHE_CHUNK_TOTAL_SIZE: 10G
+      RCLONE_CACHE_DB_PATH: /var/cache/webdav
+      RCLONE_CACHE_CHUNK_CLEAN_INTERVAL: 1m
+      RCLONE_CACHE_READ_RETRIES: 3 
+      UID: 1000
+      GID: 1000
+    networks:
+      - webdav-nw
+    volumes:
+      - ./data:/mnt/webdrive:rshared
+      - ./cache:/var/cache/webdav:rw
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /usr/local/bin/mounted  && sleep 1 || exit 1"]
+      interval: 20s
+      timeout: 15s
+      retries: 10
+      start_period: 10s     
+networks:
+  webdav-nw:
+    internal: false
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: webdav-${PROJECT_NAME}
+      com.docker.network.bridge.enable_icc: 1
+
+```
+
