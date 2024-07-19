@@ -19,7 +19,7 @@ jobs:
         with:
           submodules: true
       -
-        # Note: This uses the password, not the token as this action would
+        # Note: This uses the password, not the token as this action would 
         # otherwise not work.
         name: Update repo description at Docker Hub
         uses: peter-evans/dockerhub-description@v4
