@@ -64,9 +64,6 @@ touch $LOG_FILE
 # Create destination directory if it does not exist.
 if [ ! -d "$DEST" ]; then
     mkdir -p "$DEST"
-else
-    fusermount -u ${DEST}
-    umount -f ${DEST}
 fi
 
 # Deal with ownership
