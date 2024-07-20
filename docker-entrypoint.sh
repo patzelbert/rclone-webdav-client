@@ -81,21 +81,19 @@ rclone mount "$RCLONE_REMOTE_NAME:" "$DEST" --vfs-cache-mode full --uid "$UID" -
 
 sleep 5
 
-if [ -n "$(ls -1A "$DEST")" ]; then
+# Check if the mount was successful
+if mountpoint -q "$DEST"; then
     echo "Mounted $WEBDRIVE_URL onto $DEST"
     echo "Sync $DEST"
     sync "$DEST"
     # Notify other containers by touching a file or using another method
     touch $SUCCESS_FILE
     # Output the content of the log file
-
     cat $LOG_FILE
     exec "$@"
 else
-    echo "Nothing found in $WEBDRIVE_URL, giving up!"
+    echo "Mounting $WEBDRIVE_URL onto $DEST failed!"
     # Output the content of the log file before exiting
-
     cat $LOG_FILE
     exit 1
 fi
-
