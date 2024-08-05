@@ -63,7 +63,7 @@ parametrise the container:
 
   [secrets]: https://docs.docker.com/engine/swarm/secrets/
 
-## davFS Options
+## Rclone Options
 
 All [configuration] options recognised by rclone can be given for that particular
 share. Environment variables should be created out of the name of the
