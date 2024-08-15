@@ -1,99 +1,89 @@
 #!/usr/bin/env sh
+echo "-----------------RClone Webdav Client-----------------"
+
+echo ' '
+
 SUCCESS_FILE=/usr/local/bin/mounted
 rm -f $SUCCESS_FILE
 LOG_FILE="/var/log/rclone.log"
-DEST=${WEBDRIVE_MOUNT:-/mnt/webdrive} 
-MOUNT_POINT=/mnt/webdrive
 CONFIG_FOLDER="/root/.config/rclone"
 CONFIG_FILE="$CONFIG_FOLDER/rclone.conf"
 
+# Check if directories exist, if not create them
+create_directory() {
+    DIRECTORY=$1
+    if [ ! -d "$DIRECTORY" ]; then
+        echo "Creating $DIRECTORY"
+        mkdir -p "$DIRECTORY"
+    fi
+}
 
+# Function to create rclone configuration and mount for each URL
+mount_webdav() {
+    MOUNT_POINT=$1
+    URL=$2
+    USERNAME=$3
+    PASSWORD=$4
 
-# Check variables and defaults
-if [ -z "${WEBDRIVE_URL}" ]; then
-    echo "No URL specified!"
-    exit 1
-fi
-if [ -z "${WEBDRIVE_USERNAME}" ]; then
-    echo "No username specified, is this on purpose?"
-    WEBDRIVE_USERNAME=""
-fi
-if [ -n "${WEBDRIVE_PASSWORD_FILE}" ]; then
-    WEBDRIVE_PASSWORD=$(cat "${WEBDRIVE_PASSWORD_FILE}")
-fi
-if [ -z "${WEBDRIVE_PASSWORD}" ]; then
-    echo "No password specified, is this on purpose?"
-    WEBDRIVE_PASSWORD=""
-fi
-if [ -z "${CLEAR_TARGET}" ]; then
-    echo "No clear target specified, defaulting to true"
-    CLEAR_TARGET="true"
-fi
-if [ ! -d "$DEST" ]; then
-    mkdir -p "$DEST"
-fi
-if [ ! -d "$CONFIG_FOLDER" ]; then
-    mkdir -p "$CONFIG_FOLDER"
-fi
-if [ -n "$(env | grep "RCLONE_")" ]; then
-    echo "" >> $CONFIG_FILE
-    echo "[$DEST]" >> $CONFIG_FILE
-    for VAR in $(env); do
-        if [ -n "$(echo "$VAR" | grep -E '^RCLONE_')" ]; then
-            OPT_NAME=$(echo "$VAR" | sed -r "s/RCLONE_([^=]*)=.*/\1/g" | tr '[:upper:]' '[:lower:]')
-            VAR_FULL_NAME=$(echo "$VAR" | sed -r "s/([^=]*)=.*/\1/g")
-            VAL=$(eval echo \$$VAR_FULL_NAME)
-            echo "$OPT_NAME: $VAL" >> $CONFIG_FILE
-        fi
-    done
-fi
+    RCLONE_REMOTE_NAME="webdav_remote_$(echo $MOUNT_POINT | tr '/' '_')"  # Unique name per mount point
 
-# Rclone configuration
-RCLONE_REMOTE_NAME="webdav_remote"  # Ensure this name is valid
+    # Clear existing rclone config if any
+    rclone config delete $RCLONE_REMOTE_NAME
 
-# Clear existing rclone config if any
-rclone config delete $RCLONE_REMOTE_NAME
+    # Create rclone configuration
+    rclone config create $RCLONE_REMOTE_NAME webdav url "$URL" vendor other user "$USERNAME" pass "$PASSWORD" --log-file=$LOG_FILE --config $CONFIG_FILE
 
-# Create rclone configuration
-rclone config create $RCLONE_REMOTE_NAME webdav url "$WEBDRIVE_URL" vendor other user "$WEBDRIVE_USERNAME" pass "$WEBDRIVE_PASSWORD" --log-file=$LOG_FILE --config $CONFIG_FILE
+    # Mount with rclone
+    rclone mount "$RCLONE_REMOTE_NAME:" "$MOUNT_POINT" --vfs-cache-mode full --uid "$UID" --gid "$GID" --dir-perms 755 --file-perms 755 --log-file=$LOG_FILE --daemon --allow-non-empty --allow-other --config $CONFIG_FILE
 
-unset WEBDRIVE_PASSWORD
+    sleep 5
 
-rm -f $LOG_FILE
-touch $LOG_FILE
-# Create destination directory if it does not exist.
-if [ ! -d "$DEST" ]; then
-    mkdir -p "$DEST"
-fi
+    # Check if the mount was successful
+    if mountpoint -q "$MOUNT_POINT"; then
+        echo "Mounted $URL onto $MOUNT_POINT"
+        echo "Sync $MOUNT_POINT"
+        sync "$MOUNT_POINT"
+    else
+        echo "Mounting $URL onto $MOUNT_POINT failed!"
+        cat $LOG_FILE
+        exit 1
+    fi
+}
 
-# Deal with ownership
-if ! id -u webdrive >/dev/null 2>&1; then
-    adduser -D -u "$UID" webdrive
+# Ensure the configuration folder exists
+create_directory "$CONFIG_FOLDER"
+
+# Read in array of URLs
+# Split the string by commas if a comma is present
+if echo "$WEBDRIVE_URLS" | grep -q ','; then
+    IFS=',' read -r -a URLS < <(echo "$WEBDRIVE_URLS")
 else
-    usermod -aG webdrive $UID
+    URLS="$WEBDRIVE_URLS"
 fi
-chown webdrive:users -R "$DEST"
-chmod 755 -R "$DEST"
 
-# Mount with rclone
 
-rclone mount "$RCLONE_REMOTE_NAME:" "$DEST" --vfs-cache-mode full --uid "$UID" --gid "$GID" --dir-perms 755 --file-perms 755 --log-file=$LOG_FILE --daemon --allow-non-empty --allow-other --config $CONFIG_FILE
+# Username and password are the same for all URLs
+USERNAME="$WEBDRIVE_USERNAME"
+PASSWORD="$WEBDRIVE_PASSWORD"
 
-sleep 5
+echo ' '
+echo "-----------------------Mounting-----------------------"
+echo ' '
 
-# Check if the mount was successful
-if mountpoint -q "$DEST"; then
-    echo "Mounted $WEBDRIVE_URL onto $DEST"
-    echo "Sync $DEST"
-    sync "$DEST"
-    # Notify other containers by touching a file or using another method
-    touch $SUCCESS_FILE
-    # Output the content of the log file
-    cat $LOG_FILE
-    exec "$@"
-else
-    echo "Mounting $WEBDRIVE_URL onto $DEST failed!"
-    # Output the content of the log file before exiting
-    cat $LOG_FILE
-    exit 1
-fi
+index=1
+for url in $URLS; do
+    MOUNT_POINT="/mnt/webdrive$index"
+    echo creating "$MOUNT_POINT"
+    create_directory "$MOUNT_POINT"
+    echo mounting "$MOUNT_POINT"
+    mount_webdav "$MOUNT_POINT" "$url" "$USERNAME" "$PASSWORD"
+    index=$((index + 1)) 
+done
+
+# Notify other containers by touching a file or using another method
+touch $SUCCESS_FILE
+
+# Output the content of the log file
+cat $LOG_FILE
+
+exec "$@"

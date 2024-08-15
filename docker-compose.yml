@@ -7,9 +7,9 @@ services:
     user: root
     environment:
       DEBUG: LOG_DEBUG
-      WEBDRIVE_USERNAME: $WEBDAV_USERNAME
-      WEBDRIVE_PASSWORD: $WEBDAV_PASSWORD
-      WEBDRIVE_URL: $WEBDAV_URL
+      WEBDRIVE_URLS: $WEBDAV_URLS  # Mehrere URLs, durch Komma getrennt
+      WEBDRIVE_USERNAME: $WEBDAV_USERNAME  # Einheitlicher Benutzername
+      WEBDRIVE_PASSWORD: $WEBDAV_PASSWORD  # Einheitliches Passwort
       RCLONE_CACHE_CHUNK_SIZE: 5M
       RCLONE_CACHE_INFO_AGE: 1h
       RCLONE_CACHE_CHUNK_TOTAL_SIZE: 10G
@@ -21,10 +21,11 @@ services:
     networks:
       - webdav-nw
     volumes:
-      - ./data:/mnt/webdrive:rshared
+      - ./data:/mnt/webdrive1:rshared
+      - ./data2:/mnt/webdrive2:rshared  # Füge zusätzliche Verzeichnisse hinzu
       - ./cache:/var/cache/webdav:rw
     healthcheck:
-      test: ["CMD-SHELL", "test -f /usr/local/bin/mounted  && sleep 1 || exit 1"]
+      test: ["CMD-SHELL", "test -f /usr/local/bin/mounted && sleep 1 || exit 1"]
       interval: 20s
       timeout: 15s
       retries: 10

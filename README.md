@@ -31,9 +31,9 @@ docker run -it --rm \
     --security-opt "apparmor=unconfined" \
     --env "WEBDRIVE_USERNAME=<YourUserName>" \
     --env "WEBDRIVE_PASSWORD=<SuperSecretPassword>" \
-    --env "WEBDRIVE_URL=https://dav.box.com/dav" \
+    --env "WEBDRIVE_URLS=https://dav.box.com/dav,https://dav.box.com/dav2" \
     --env "RCLONE_CACHE_INFO_AGE=1h" \
-    -v /mnt/tmp:/mnt/webdrive:rshared \
+    -v /mnt/tmp:/mnt/webdrive1:rshared \
     patzelbert/rclone-webdav-client
 ```
 
@@ -47,7 +47,7 @@ directories available back to the host and recursively to other containers.
 A series of environment variables, most led by `WEBDRIVE_` can be used to
 parametrise the container:
 
-* `WEBDRIVE_URL` is the URL at which to find the WebDAV resource.
+* `WEBDRIVE_URLS` is the comma seperated list of URLs at which to find the WebDAV resource.
 * `WEBDRIVE_USERNAME` is the user to use for accessing the resource.
 * `WEBDRIVE_PASSWORD` is the password for that user.
 * `WEBDRIVE_PASSWORD_FILE` points instead to a file that will contain the
@@ -55,9 +55,6 @@ parametrise the container:
   the file instead of from the `WEBDRIVE_PASSWORD` variable. If that variable
   existed, it will be disregarded. This makes it easy to pass passwords using 
   Docker [secrets].
-* `WEBDRIVE_MOUNT` is the location within the container where to mount the
-  WebDAV resource. This defaults to `/mnt/webdrive` and is not really meant to
-  be changed.
 * `UID` is the user ID for the owner of the share inside the container.
 * `GID` is the user ID for the owner of the share inside the container.
 
@@ -109,7 +106,7 @@ special thanks to [efrecon].
 		  DEBUG: LOG_DEBUG
 		  WEBDRIVE_USERNAME: $WEBDAV_USERNAME
 		  WEBDRIVE_PASSWORD: $WEBDAV_PASSWORD
-		  WEBDRIVE_URL: $WEBDAV_URL
+		  WEBDRIVE_URLS: $WEBDAV_URLS
 		  RCLONE_CACHE_CHUNK_SIZE: 5M
 		  RCLONE_CACHE_INFO_AGE: 1h
 		  RCLONE_CACHE_CHUNK_TOTAL_SIZE: 10G
@@ -121,7 +118,7 @@ special thanks to [efrecon].
 		networks:
 		  - webdav-nw
 		volumes:
-		  - ./data:/mnt/webdrive:rshared
+		  - ./data:/mnt/webdrive1:rshared
 		  - ./cache:/var/cache/webdav:rw
 		healthcheck:
 		  test: ["CMD-SHELL", "test -f /usr/local/bin/mounted  && sleep 1 || exit 1"]
