@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 echo "-----------------RClone Webdav Client-----------------"
-
 echo ' '
+touch /var/log/rclone.log
 
 SUCCESS_FILE=/usr/local/bin/mounted
 rm -f $SUCCESS_FILE
@@ -55,29 +55,27 @@ create_directory "$CONFIG_FOLDER"
 
 # Read in array of URLs
 # Split the string by commas if a comma is present
-if echo "$WEBDRIVE_URLS" | grep -q ','; then
-    IFS=',' read -r -a URLS < <(echo "$WEBDRIVE_URLS")
-else
-    URLS="$WEBDRIVE_URLS"
-fi
-
+URLS=${WEBDRIVE_URLS//,/ }
 
 # Username and password are the same for all URLs
 USERNAME="$WEBDRIVE_USERNAME"
 PASSWORD="$WEBDRIVE_PASSWORD"
 
-echo ' '
-echo "-----------------------Mounting-----------------------"
-echo ' '
+
 
 index=1
 for url in $URLS; do
+
     MOUNT_POINT="/mnt/webdrive$index"
+    echo ' '
+    echo "-----------------------Mounting-----------------------"
+    echo ' '
     echo creating "$MOUNT_POINT"
     create_directory "$MOUNT_POINT"
     echo mounting "$MOUNT_POINT"
     mount_webdav "$MOUNT_POINT" "$url" "$USERNAME" "$PASSWORD"
     index=$((index + 1)) 
+
 done
 
 # Notify other containers by touching a file or using another method

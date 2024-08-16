@@ -2,13 +2,16 @@
 
 PERIOD=${1:-60}
 . trap.sh
-echo ' '
-echo "-----------------------Running-----------------------"
-echo ' '
+
 while true; do
     for MOUNT_POINT in /mnt/webdrive*; do
         if [ -d "$MOUNT_POINT" ]; then
-            echo "$MOUNT_POINT is still mounted..."
+            echo ' '
+            echo "-----------------------Alive------------------------"
+            echo ' '
+            echo "$MOUNT_POINT:"
+            ls $MOUNT_POINT
+    sleep $PERIOD
         fi
     done
     sleep $PERIOD

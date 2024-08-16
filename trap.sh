@@ -6,7 +6,7 @@ echo ' '
     for MOUNT_POINT in /mnt/webdrive*; do
         if [ -d "$MOUNT_POINT" ]; then
             echo "Unmounting ${MOUNT_POINT}..."
-            fusermount -u "$MOUNT_POINT"
+            umount -f "$MOUNT_POINT"
         fi
     done
     rclone_pid=$(ps -o pid= -o comm= | grep rclone | sed -E 's/\s*(\d+)\s+.*/\1/g')

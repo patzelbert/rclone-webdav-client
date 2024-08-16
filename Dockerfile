@@ -28,7 +28,7 @@ ENV RCLONE_LOG_FORMAT=LOG_DEBUG
 ENV UID=0
 ENV GID=0 
 
-RUN apk --no-cache add ca-certificates fuse fuse3 tini rclone
+RUN apk --no-cache add ca-certificates fuse3 tini rclone
 RUN apk upgrade --available
 
 COPY *.sh /usr/local/bin/
