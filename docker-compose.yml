@@ -35,5 +35,5 @@ networks:
     internal: false
     driver: bridge
     driver_opts:
-      com.docker.network.bridge.name: webdav-${PROJECT_NAME}
+      com.docker.network.bridge.name: ${PROJECT_NAME}
       com.docker.network.bridge.enable_icc: 1
